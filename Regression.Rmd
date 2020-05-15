@@ -1,0 +1,71 @@
+---
+title: "Regression Project _ Motor Trend"
+author: "Luoning"
+date: "5/15/2020"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+## 1.Synopsis
+
+The work is based on data of Motor Trend, a magazine about the automobile industry. The data set of a collection of cars was reviewed. And the relationship between a set of variables and miles per gallon (MPG) (outcome) was analyzed. Two particular questions were answered: 1) whether an automatic or manual transmission is better for MPG; 2) whether the the MPG difference between automatic and manual transmissions can be quantified.
+
+## 2.Data download and process
+
+```{r load, cache=TRUE}
+# Datasets
+library(datasets)
+data(mtcars)
+
+# View of the data
+head(mtcars)
+```
+
+
+```{r gplot, cache=TRUE, warning=FALSE}
+library(dplyr)
+mtcars<-mutate(mtcars,Transmission=am)
+mtcars$Transmission[mtcars$Transmission==1]<-'Manual'
+mtcars$Transmission[mtcars$Transmission==0]<-'Automatic'
+mtcars$Transmission<-factor(paste(mtcars$Transmission))
+# Plot the mpg of manual vs automatic
+boxplot(mtcars$mpg ~ mtcars$Transmission, data=mtcars, outpch = 19, ylab="MPG", xlab="Transimssion", main="MPG vs Transmission")
+```
+  
+From visuallization, the mpg of manual transmission is higher than that of automatic transmission. Now let's evaluate the significance.
+```{r ttest, cache=TRUE}
+auto<-mtcars[mtcars$Transmission=='Automatic',]
+manual<-mtcars[mtcars$Transmission=='Manual',]
+t.test(auto$mpg,manual$mpg)
+```
+The t value is negative and the confidence interval is absolutely below zero, which means the hypothesis that the automatic and manual transmission are the same (t=0) is rejected. The difference in the mpg of automatic and manual transmission is significant, and the mpg of automatic is lower than manual.
+
+## Regression Model
+To quantify the difference between the automatic and manual transmission. The regression model is applied to evaluate the correlation of all other variables vs. transmission and mpg relationship.
+
+```{r lm,cache=TRUE}
+fit1<-lm(mpg~am,mtcars)
+summary(fit1)
+```
+The p-value is low but the R value is only 0.3385, which means other variables may influence the mpg. Now let's consider other variables and perform the multivariable linear regression.
+
+```{r mvlm3,cache=TRUE}
+fit3<-lm(mpg~am+cyl+wt,mtcars)
+summary(fit3)
+```
+
+  
+## Residual and Diagnostics
+Multivariable regression model residuals
+```{r Res,cache=TRUE}
+par(mfrow=c(2,2))
+plot(fit3)
+par(mfrow=c(1,1))
+```
+From the above plots, we can make the following observations:  
+The residuals appear to be randomly scattered on the plot and verify the independence condition.  
+The points in Q-Q plot mostly fall on the line which indicates the normally distributed residuals.  
+The Scale-Location plot consists of points scattered in a constant band pattern, indicating constant variance.  
+The outliers or leverage points are limited and acceptible.
